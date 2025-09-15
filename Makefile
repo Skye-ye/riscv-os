@@ -5,6 +5,8 @@ OBJS = \
   kernel/entry.o \
   kernel/start.o \
   kernel/uart.o \
+  kernel/console.o \
+  kernel/printf.o \
   kernel/main.o
 
 # Try to infer the correct TOOLPREFIX if not set

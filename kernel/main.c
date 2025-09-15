@@ -4,6 +4,10 @@
 
 // start() jumps here in supervisor mode on all CPUs.
 void main() {
-  uartinit();
-  uart_puts("hello world\n");
+  consoleinit();
+  printfinit();
+  printf("Hello, world!\n");
+  long long id = 2023302111369;
+  printf("My ID is %lld\n", id);
+  panic("main");
 }
