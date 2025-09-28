@@ -1,6 +1,7 @@
 // console.c
 void consoleinit(void);
 void consputc(int);
+void clear_screen(void);
 
 // printf.c
 int printf(char *, ...) __attribute__((format(printf, 1, 2)));

@@ -9,5 +9,6 @@ void main() {
   printf("Hello, world!\n");
   long long id = 2023302111369;
   printf("My ID is %lld\n", id);
+  clear_screen();
   panic("main");
 }

@@ -32,4 +32,7 @@ void consputc(int c) {
   }
 }
 
+// Clear screen function using ANSI escape sequences
+void clear_screen(void) { printf("\033[2J\033[H"); }
+
 void consoleinit(void) { uartinit(); }
