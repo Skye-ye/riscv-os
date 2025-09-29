@@ -3,4 +3,5 @@ CLAUDE.md
 *.d
 *.asm
 *.sym
+kernel/kernel
 compile_commands.json
