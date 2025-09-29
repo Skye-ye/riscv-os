@@ -4,4 +4,5 @@ CLAUDE.md
 *.asm
 *.sym
 kernel/kernel
+.gdbinit
 compile_commands.json
