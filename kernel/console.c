@@ -11,6 +11,7 @@
 
 #include <stdarg.h>
 
+#include "types.h"
 #include "defs.h"
 
 #define BACKSPACE 0x100

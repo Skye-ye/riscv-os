@@ -6,9 +6,9 @@
 void main() {
   consoleinit();
   printfinit();
-  printf("Hello, world!\n");
-  long long id = 2023302111369;
-  printf("My ID is %lld\n", id);
-  clear_screen();
+  printf("\n");
+  printf("kernel is booting\n");
+  printf("\n");
+  kinit(); // physical page allocator
   panic("main");
 }
