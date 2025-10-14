@@ -9,6 +9,9 @@ OBJS = \
   kernel/uart.o \
   kernel/kalloc.o \
   kernel/string.o \
+  kernel/vm.o \
+  kernel/trampoline.o \
+  kernel/kerneltest.o \
   kernel/main.o
 
 # Try to infer the correct TOOLPREFIX if not set
