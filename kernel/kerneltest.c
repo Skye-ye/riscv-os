@@ -2,6 +2,7 @@
 #include "param.h"
 #include "memlayout.h"
 #include "riscv.h"
+#include "trap.h"
 #include "defs.h"
 
 #define assert(expr)                                                           \

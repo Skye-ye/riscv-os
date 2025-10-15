@@ -11,6 +11,9 @@ OBJS = \
   kernel/string.o \
   kernel/vm.o \
   kernel/trampoline.o \
+  kernel/trap.o \
+  kernel/kernelvec.o \
+  kernel/plic.o \
   kernel/kerneltest.o \
   kernel/main.o
 
