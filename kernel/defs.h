@@ -29,6 +29,7 @@ int strncmp(const char *, const char *, uint);
 char *strncpy(char *, const char *, int);
 
 // trap.c
+extern uint ticks;
 void trapinit(void);
 void trapinithart(void);
 int register_interrupt(int irq, interrupt_handler_t handler, void *dev_id,

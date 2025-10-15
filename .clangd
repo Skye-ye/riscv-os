@@ -10,4 +10,4 @@ CompileFlags:
 If:
   PathMatch: kernel/trap\.h$
 CompileFlags:
-  Add: [-include, kennel/param.h]
+  Add: [-include, kernel/param.h]

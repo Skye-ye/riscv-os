@@ -8,7 +8,10 @@
 // struct spinlock tickslock;
 uint ticks;
 
-extern char trampoline[], kernelvec[];
+extern char trampoline[];
+
+// in kernelvec.S, calls kerneltrap().
+void kernelvec();
 
 extern int devintr();
 
@@ -40,6 +43,53 @@ void trapinit(void) {
 
   interrupt_context.depth = 0;
   interrupt_context.saved_priority = IRQ_PRIORITY_IDLE;
+}
+
+// set up to take exceptions and traps while in the kernel.
+void trapinithart(void) { w_stvec((uint64)kernelvec); }
+
+// interrupts and exceptions from kernel code go here via kernelvec,
+// on whatever the current kernel stack is.
+void kerneltrap() {
+  int which_dev = 0;
+  uint64 sepc = r_sepc();
+  uint64 sstatus = r_sstatus();
+  uint64 scause = r_scause();
+
+  if ((sstatus & SSTATUS_SPP) == 0)
+    panic("kerneltrap: not from supervisor mode");
+  if (intr_get() != 0)
+    panic("kerneltrap: interrupts enabled");
+
+  if ((which_dev = devintr()) == 0) {
+    // interrupt or trap from an unknown source
+    printf("scause=0x%lx sepc=0x%lx stval=0x%lx\n", scause, r_sepc(),
+           r_stval());
+    panic("kerneltrap");
+  }
+
+  // give up the CPU if this is a timer interrupt.
+  // if (which_dev == 2 && myproc() != 0)
+  // yield();
+
+  // the yield() may have caused some traps to occur,
+  // so restore trap registers for use by kernelvec.S's sepc instruction.
+  w_sepc(sepc);
+  w_sstatus(sstatus);
+}
+
+void clockintr() {
+  // if (cpuid() == 0) {
+  // acquire(&tickslock);
+  ticks++;
+  // wakeup(&ticks);
+  // release(&tickslock);
+  // }
+
+  // ask for the next timer interrupt. this also clears
+  // the interrupt request. 1000000 is about a tenth
+  // of a second.
+  w_stimecmp(r_time() + 1000000);
 }
 
 //
@@ -277,9 +327,6 @@ uint64 get_irq_count(int irq) {
   return irq_descriptors[irq].count;
 }
 
-// set up to take exceptions and traps while in the kernel.
-void trapinithart(void) { w_stvec((uint64)kernelvec); }
-
 //
 // handle an interrupt, exception, or system call from user space.
 // called from, and returns to, trampoline.S
@@ -377,50 +424,6 @@ void trapinithart(void) { w_stvec((uint64)kernelvec); }
 // // set S Exception Program Counter to the saved user pc.
 // w_sepc(p->trapframe->epc);
 // }
-
-// interrupts and exceptions from kernel code go here via kernelvec,
-// on whatever the current kernel stack is.
-void kerneltrap() {
-  int which_dev = 0;
-  uint64 sepc = r_sepc();
-  uint64 sstatus = r_sstatus();
-  uint64 scause = r_scause();
-
-  if ((sstatus & SSTATUS_SPP) == 0)
-    panic("kerneltrap: not from supervisor mode");
-  if (intr_get() != 0)
-    panic("kerneltrap: interrupts enabled");
-
-  if ((which_dev = devintr()) == 0) {
-    // interrupt or trap from an unknown source
-    printf("scause=0x%lx sepc=0x%lx stval=0x%lx\n", scause, r_sepc(),
-           r_stval());
-    panic("kerneltrap");
-  }
-
-  // give up the CPU if this is a timer interrupt.
-  // if (which_dev == 2 && myproc() != 0)
-  // yield();
-
-  // the yield() may have caused some traps to occur,
-  // so restore trap registers for use by kernelvec.S's sepc instruction.
-  w_sepc(sepc);
-  w_sstatus(sstatus);
-}
-
-void clockintr() {
-  // if (cpuid() == 0) {
-  // acquire(&tickslock);
-  // ticks++;
-  // wakeup(&ticks);
-  // release(&tickslock);
-  // }
-
-  // ask for the next timer interrupt. this also clears
-  // the interrupt request. 1000000 is about a tenth
-  // of a second.
-  w_stimecmp(r_time() + 1000000);
-}
 
 // check if it's an external interrupt or software interrupt,
 // and handle it.

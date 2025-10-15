@@ -47,8 +47,27 @@ void test_pagetable(void) {
   printf("pagetable test passed\n");
 }
 
+void test_timer_interrupt(void) {
+  uint64 start_time = r_time();
+  uint start_ticks = ticks;
+
+  while (1) {
+    uint current_ticks = ticks;
+
+    if (current_ticks >= start_ticks + 5) {
+      break;
+    }
+  }
+
+  uint64 end_time = r_time();
+
+  printf("Timer test completed: 5 interrupts in %lu milliseconds\n",
+         (end_time - start_time) / 10000);
+}
+
 void kerneltest(void) {
   test_physical_memory();
   test_pagetable();
+  test_timer_interrupt();
   printf("all kernel tests passed\n");
 }
