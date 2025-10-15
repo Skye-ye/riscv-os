@@ -24,6 +24,38 @@ struct {
   int saved_priority; // Priority before interrupt
 } interrupt_context;
 
+static void dump_trapframe(const struct trapframe *tf);
+
+__attribute__((weak)) void handle_illegal_instruction(struct trapframe *tf) {
+  printf("Illegal instruction at sepc=0x%lx\n", tf->sepc);
+  dump_trapframe(tf);
+  tf->sepc += 4; // Skip the illegal instruction to avoid infinite loop
+}
+
+__attribute__((weak)) void handle_syscall(struct trapframe *tf) {
+  printf("Unexpected system call: sepc=0x%lx\n", tf->sepc);
+  dump_trapframe(tf);
+  tf->sepc += 4; // Skip the syscall instruction to avoid infinite loop
+}
+
+__attribute__((weak)) void handle_instruction_page_fault(struct trapframe *tf) {
+  printf("Instruction page fault at 0x%lx\n", tf->stval);
+  dump_trapframe(tf);
+  tf->sepc += 4; // Skip the faulting instruction to avoid infinite loop
+}
+
+__attribute__((weak)) void handle_load_page_fault(struct trapframe *tf) {
+  printf("Load fault (scause=%lu) at 0x%lx\n", tf->scause, tf->stval);
+  dump_trapframe(tf);
+  tf->sepc += 4; // Skip the faulting instruction to avoid infinite loop
+}
+
+__attribute__((weak)) void handle_store_page_fault(struct trapframe *tf) {
+  printf("Store fault (scause=%lu) at 0x%lx\n", tf->scause, tf->stval);
+  dump_trapframe(tf);
+  tf->sepc += 4; // Skip the faulting instruction to avoid infinite loop
+}
+
 void trapinit(void) {
   // Initialize all IRQ descriptors
   for (int i = 0; i < MAX_IRQS; i++) {
@@ -51,21 +83,27 @@ void trapinithart(void) { w_stvec((uint64)kernelvec); }
 // interrupts and exceptions from kernel code go here via kernelvec,
 // on whatever the current kernel stack is.
 void kerneltrap() {
+  struct trapframe tf;
   int which_dev = 0;
-  uint64 sepc = r_sepc();
-  uint64 sstatus = r_sstatus();
-  uint64 scause = r_scause();
 
-  if ((sstatus & SSTATUS_SPP) == 0)
+  tf.sepc = r_sepc();
+  tf.sstatus = r_sstatus();
+  tf.scause = r_scause();
+  tf.stval = r_stval();
+
+  if ((tf.sstatus & SSTATUS_SPP) == 0)
     panic("kerneltrap: not from supervisor mode");
   if (intr_get() != 0)
     panic("kerneltrap: interrupts enabled");
 
-  if ((which_dev = devintr()) == 0) {
-    // interrupt or trap from an unknown source
-    printf("scause=0x%lx sepc=0x%lx stval=0x%lx\n", scause, r_sepc(),
-           r_stval());
-    panic("kerneltrap");
+  if (tf.scause & (1UL << 63)) {
+    if ((which_dev = devintr()) == 0) {
+      printf("Unknown interrupt: scause=0x%lx sepc=0x%lx\n", tf.scause,
+             tf.sepc);
+      panic("kerneltrap");
+    }
+  } else {
+    handle_exception(&tf);
   }
 
   // give up the CPU if this is a timer interrupt.
@@ -74,8 +112,8 @@ void kerneltrap() {
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.
-  w_sepc(sepc);
-  w_sstatus(sstatus);
+  w_sepc(tf.sepc);
+  w_sstatus(tf.sstatus);
 }
 
 void clockintr() {
@@ -325,6 +363,45 @@ uint64 get_irq_count(int irq) {
     return 0;
 
   return irq_descriptors[irq].count;
+}
+
+static void dump_trapframe(const struct trapframe *tf) {
+  if (tf == 0)
+    return;
+
+  printf("  sepc=0x%lx\n", tf->sepc);
+  printf("  sstatus=0x%lx\n", tf->sstatus);
+  printf("  scause=0x%lx\n", tf->scause);
+  printf("  stval=0x%lx\n", tf->stval);
+}
+
+void handle_exception(struct trapframe *tf) {
+  if (tf == 0)
+    panic("handle_exception: null trapframe");
+
+  switch (tf->scause) {
+  case 2: // Illegal instruction
+    handle_illegal_instruction(tf);
+    break;
+  case 8: // System call from U-mode
+    handle_syscall(tf);
+    break;
+  case 12: // Instruction page fault
+    handle_instruction_page_fault(tf);
+    break;
+  case 5:  // Load access fault (e.g. MMIO without mapping)
+  case 13: // Load page fault
+    handle_load_page_fault(tf);
+    break;
+  case 7:  // Store/AMO access fault
+  case 15: // Store/AMO page fault
+    handle_store_page_fault(tf);
+    break;
+  default:
+    printf("Unknown exception: scause=0x%lx\n", tf->scause);
+    dump_trapframe(tf);
+    tf->sepc += 4; // Skip the faulting instruction to avoid infinite loop
+  }
 }
 
 //

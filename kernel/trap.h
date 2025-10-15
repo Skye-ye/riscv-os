@@ -31,3 +31,10 @@ struct irq_desc {
   uint64 count;           // Number of times this IRQ fired
   uint64 unhandled_count; // Number of unhandled interrupts
 };
+
+struct trapframe {
+  uint64 sepc;    // Saved supervisor exception program counter
+  uint64 sstatus; // Saved supervisor status register
+  uint64 stval;   // Trap value (faulting address)
+  uint64 scause;  // Trap cause code
+};

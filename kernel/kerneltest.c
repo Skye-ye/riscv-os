@@ -61,13 +61,35 @@ void test_timer_interrupt(void) {
 
   uint64 end_time = r_time();
 
-  printf("Timer test completed: 5 interrupts in %lu milliseconds\n",
+  printf("timer interrupt test passed: 5 interrupts in %lu milliseconds\n",
          (end_time - start_time) / 10000);
+}
+
+void test_exception_handling(void) {
+  // Test 1: Illegal Instruction Exception
+  __asm__ volatile(".word 0x00000000\n" // All zeros = illegal instruction
+                   "nop\n"              // Padding
+                   "nop\n"
+                   "nop\n");
+
+  // Test 2: Load Page Fault
+  volatile uint64 *invalid_addr = (uint64 *)0xFFFFFFFF00000000UL;
+  uint64 bad_value = *invalid_addr; // Should trap with scause = 5
+  (void)bad_value;
+  __asm__ volatile("nop\nnop\nnop\n");
+
+  // Test 3: Store Page Fault
+  volatile uint64 *bad_store = (uint64 *)0xDEADBEEF00000000UL;
+  *bad_store = 0x42; // Should trap with scause = 7
+  __asm__ volatile("nop\nnop\nnop\n");
+
+  printf("exception handling test passed\n");
 }
 
 void kerneltest(void) {
   test_physical_memory();
   test_pagetable();
   test_timer_interrupt();
+  test_exception_handling();
   printf("all kernel tests passed\n");
 }

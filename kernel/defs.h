@@ -32,19 +32,19 @@ char *strncpy(char *, const char *, int);
 extern uint ticks;
 void trapinit(void);
 void trapinithart(void);
-int register_interrupt(int irq, interrupt_handler_t handler, void *dev_id,
-                       char *name);
-void unregister_interrupt(int irq, interrupt_handler_t handler, void *dev_id);
-void enable_interrupt(int irq);
-void disable_interrupt(int irq);
-void set_irq_priority(int irq, int priority);
-int get_irq_priority(int irq);
+void handle_exception(struct trapframe *);
+int register_interrupt(int, interrupt_handler_t, void *, char *);
+void unregister_interrupt(int, interrupt_handler_t, void *);
+void enable_interrupt(int);
+void disable_interrupt(int);
+void set_irq_priority(int, int);
+int get_irq_priority(int);
 void enter_interrupt(void);
 void exit_interrupt(void);
 int in_interrupt(void);
 int interrupt_depth(void);
 void print_irq_stats(void);
-uint64 get_irq_count(int irq);
+uint64 get_irq_count(int);
 
 // uart.c
 void uartinit(void);
