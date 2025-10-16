@@ -14,6 +14,9 @@ OBJS = \
   kernel/trap.o \
   kernel/kernelvec.o \
   kernel/plic.o \
+  kernel/spinlock.o \
+  kernel/proc.o \
+  kernel/swtch.o \
   kernel/kerneltest.o \
   kernel/main.o
 

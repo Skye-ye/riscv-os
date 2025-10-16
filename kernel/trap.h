@@ -1,3 +1,8 @@
+#ifndef TRAP_H
+#define TRAP_H
+
+#include "param.h"
+
 // Interrupt priority levels (0 = highest, 7 = lowest)
 #define IRQ_PRIORITY_CRITICAL 0
 #define IRQ_PRIORITY_HIGH 2
@@ -25,16 +30,18 @@ struct irq_handler {
 // IRQ descriptor
 struct irq_desc {
   struct irq_handler handlers[MAX_HANDLERS_PER_IRQ];
-  // struct spinlock lock;   // Protects this IRQ descriptor
+  struct spinlock lock;   // Protects this IRQ descriptor
   int priority;           // Priority level (0-7)
   int enabled;            // Is this IRQ enabled?
   uint64 count;           // Number of times this IRQ fired
   uint64 unhandled_count; // Number of unhandled interrupts
 };
 
-struct trapframe {
+struct trapctx {
   uint64 sepc;    // Saved supervisor exception program counter
   uint64 sstatus; // Saved supervisor status register
   uint64 stval;   // Trap value (faulting address)
   uint64 scause;  // Trap cause code
 };
+
+#endif // TRAP_H
