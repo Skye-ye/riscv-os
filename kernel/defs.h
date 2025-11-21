@@ -3,7 +3,6 @@
 
 #include "riscv.h"
 #include "proc.h"
-#include "trap.h"
 
 struct buf;
 struct context;
@@ -141,28 +140,24 @@ char *strncpy(char *, const char *, int);
 // swtch.S
 void swtch(struct context *, struct context *);
 
+// syscall.c
+void argint(int, int *);
+int argstr(int, char *, int);
+void argaddr(int, uint64 *);
+int fetchstr(uint64, char *, int);
+int fetchaddr(uint64, uint64 *);
+void syscall();
+
 // trap.c
 extern uint ticks;
-extern struct spinlock tickslock;
 void trapinit(void);
 void trapinithart(void);
+extern struct spinlock tickslock;
 void prepare_return(void);
-int register_interrupt(int, interrupt_handler_t, void *, char *);
-void unregister_interrupt(int, interrupt_handler_t, void *);
-void enable_interrupt(int);
-void disable_interrupt(int);
-void set_irq_priority(int, int);
-int get_irq_priority(int);
-void enter_interrupt(void);
-void exit_interrupt(void);
-int in_interrupt(void);
-int interrupt_depth(void);
-void print_irq_stats(void);
-uint64 get_irq_count(int);
 
 // uart.c
 void uartinit(void);
-int uartintr(void *);
+void uartintr(void);
 void uartwrite(char[], int);
 void uartputc_sync(int);
 int uartgetc(void);

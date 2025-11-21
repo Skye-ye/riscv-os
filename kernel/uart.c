@@ -65,9 +65,7 @@ void uartinit(void) {
   // enable transmit and receive interrupts.
   WriteReg(IER, IER_TX_ENABLE | IER_RX_ENABLE);
 
-  // initlock(&tx_lock, "uart");
-
-  register_interrupt(UART0_IRQ, uartintr, 0, "uart");
+  initlock(&tx_lock, "uart");
 }
 
 // transmit buf[] to the uart. it blocks if the
@@ -128,7 +126,7 @@ int uartgetc(void) {
 // handle a uart interrupt, raised because input has
 // arrived, or the uart is ready for more output, or
 // both. called from devintr().
-int uartintr(void *dev_id) {
+void uartintr(void) {
   ReadReg(ISR); // acknowledge the interrupt
 
   acquire(&tx_lock);
@@ -146,6 +144,4 @@ int uartintr(void *dev_id) {
       break;
     consoleintr(c);
   }
-
-  return IRQ_HANDLED;
 }
