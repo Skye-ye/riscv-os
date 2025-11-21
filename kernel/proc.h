@@ -3,6 +3,7 @@
 
 #include "spinlock.h"
 #include "param.h"
+#include "riscv.h"
 
 // Saved registers for kernel context switches.
 struct context {

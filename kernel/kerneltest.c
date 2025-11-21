@@ -83,10 +83,16 @@ void test_exception_handling(void) {
   printf("exception handling test passed\n");
 }
 
+void test_process_creation(void) {
+  int pid = kfork();
+  assert(pid > 0);
+}
+
 void kerneltest(void) {
   test_physical_memory();
   test_pagetable();
   test_timer_interrupt();
   test_exception_handling();
+  test_process_creation();
   printf("all kernel tests passed\n");
 }

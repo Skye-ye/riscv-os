@@ -184,18 +184,18 @@ void proc_freepagetable(pagetable_t pagetable, uint64 sz) {
 }
 
 // Set up first user process.
-// void userinit(void) {
-// struct proc *p;
+void userinit(void) {
+  struct proc *p;
 
-// p = allocproc();
-// initproc = p;
+  p = allocproc();
+  initproc = p;
 
-// p->cwd = namei("/");
+  // p->cwd = namei("/");
 
-// p->state = RUNNABLE;
+  p->state = RUNNABLE;
 
-// release(&p->lock);
-// }
+  release(&p->lock);
+}
 
 // Shrink user memory by n bytes.
 // Return 0 on success, -1 on failure.

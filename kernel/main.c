@@ -1,4 +1,3 @@
-#include "riscv.h"
 #include "defs.h"
 
 // start() jumps here in supervisor mode on all CPUs.
@@ -12,10 +11,10 @@ void main() {
   kinit();        // physical page allocator
   kvminit();      // create kernel page table
   kvminithart();  // turn on paging
+  procinit();     // process table
   trapinithart(); // install kernel trap vector
   plicinit();     // set up interrupt controller
   plicinithart(); // ask PLIC for device interrupts
-  intr_on();
-  kerneltest(); // run kernel tests
-  panic("main");
+  userinit();
+  scheduler();
 }
