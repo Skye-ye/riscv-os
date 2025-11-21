@@ -14,6 +14,7 @@
 #include "types.h"
 #include "spinlock.h"
 #include "defs.h"
+#include "file.h"
 
 #define BACKSPACE 0x100
 #define C(x) ((x) - '@') // Control-x
@@ -176,6 +177,6 @@ void consoleinit(void) {
 
   // connect read and write system calls
   // to consoleread and consolewrite.
-  // devsw[CONSOLE].read = consoleread;
-  // devsw[CONSOLE].write = consolewrite;
+  devsw[CONSOLE].read = consoleread;
+  devsw[CONSOLE].write = consolewrite;
 }

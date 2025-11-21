@@ -190,7 +190,7 @@ void userinit(void) {
   p = allocproc();
   initproc = p;
 
-  // p->cwd = namei("/");
+  p->cwd = namei("/");
 
   p->state = RUNNABLE;
 
@@ -218,7 +218,7 @@ int growproc(int n) {
 // Create a new process, copying the parent.
 // Sets up child kernel stack to return as if from fork() system call.
 int kfork(void) {
-  int pid;
+  int i, pid;
   struct proc *np;
   struct proc *p = myproc();
 
@@ -242,10 +242,10 @@ int kfork(void) {
   np->trapframe->a0 = 0;
 
   // increment reference counts on open file descriptors.
-  // for (i = 0; i < NOFILE; i++)
-  // if (p->ofile[i])
-  // np->ofile[i] = filedup(p->ofile[i]);
-  // np->cwd = idup(p->cwd);
+  for (i = 0; i < NOFILE; i++)
+    if (p->ofile[i])
+      np->ofile[i] = filedup(p->ofile[i]);
+  np->cwd = idup(p->cwd);
 
   safestrcpy(np->name, p->name, sizeof(p->name));
 
@@ -287,18 +287,18 @@ void kexit(int status) {
     panic("init exiting");
 
   // Close all open files.
-  // for (int fd = 0; fd < NOFILE; fd++) {
-  // if (p->ofile[fd]) {
-  // struct file *f = p->ofile[fd];
-  // fileclose(f);
-  // p->ofile[fd] = 0;
-  // }
-  // }
+  for (int fd = 0; fd < NOFILE; fd++) {
+    if (p->ofile[fd]) {
+      struct file *f = p->ofile[fd];
+      fileclose(f);
+      p->ofile[fd] = 0;
+    }
+  }
 
-  // begin_op();
-  // iput(p->cwd);
-  // end_op();
-  // p->cwd = 0;
+  begin_op();
+  iput(p->cwd);
+  end_op();
+  p->cwd = 0;
 
   acquire(&wait_lock);
 
@@ -451,29 +451,22 @@ void yield(void) {
 // will swtch to forkret.
 void forkret(void) {
   extern char userret[];
-  // static int first = 1;
   struct proc *p = myproc();
 
   // Still holding p->lock from scheduler.
   release(&p->lock);
 
-  // if (first) {
-  // // File system initialization must be run in the context of a
-  // // regular process (e.g., because it calls sleep), and thus cannot
-  // // be run from main().
-  // fsinit(ROOTDEV);
+  // File system initialization must be run in the context of a
+  // regular process (e.g., because it calls sleep), and thus cannot
+  // be run from main().
+  fsinit(ROOTDEV);
 
-  // first = 0;
-  // // ensure other cores see first=0.
-  // __sync_synchronize();
-
-  // // We can invoke kexec() now that file system is initialized.
-  // // Put the return value (argc) of kexec into a0.
-  // p->trapframe->a0 = kexec("/init", (char *[]){"/init", 0});
-  // if (p->trapframe->a0 == -1) {
-  // panic("exec");
-  // }
-  // }
+  // We can invoke kexec() now that file system is initialized.
+  // Put the return value (argc) of kexec into a0.
+  p->trapframe->a0 = kexec("/init", (char *[]){"/init", 0});
+  if (p->trapframe->a0 == -1) {
+    panic("exec");
+  }
 
   // return to user space, mimicing usertrap()'s return.
   prepare_return();

@@ -17,6 +17,14 @@ OBJS = \
   kernel/spinlock.o \
   kernel/proc.o \
   kernel/swtch.o \
+  kernel/sleeplock.o \
+  kernel/bio.o \
+  kernel/virtio_disk.o \
+  kernel/fs.o \
+  kernel/file.o \
+  kernel/pipe.o \
+  kernel/log.o \
+  kernel/exec.o \
   kernel/kerneltest.o \
   kernel/main.o
 
