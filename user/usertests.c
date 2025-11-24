@@ -188,9 +188,17 @@ void test_security(void) {
   int result = write(1, invalid_ptr, 10);
   printf("Invalid pointer write result: %d\n", result);
 
+  // Feed controlled input via a pipe so this test is non-interactive.
+  int p[2];
+  assert(pipe(p) == 0);
+  const char *payload = "abcdefghij";
+  write(p[1], payload, 10);
+  close(p[1]);
+
   char small_buffer[4];
-  result = read(0, small_buffer, 10);
+  result = read(p[0], small_buffer, 10);
   printf("Buffer overflow read result: %d\n", result);
+  close(p[0]);
 }
 
 void test_syscall_performance(void) {
