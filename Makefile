@@ -119,6 +119,7 @@ UPROGS=\
 	$U/_init\
 	$U/_kill\
 	$U/_sh\
+	$U/_cowtest\
 	$U/_usertests\
 
 fs.img: mkfs/mkfs $(UPROGS)
